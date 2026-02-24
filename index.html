@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Husky Card Reader</title>
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
+</head>
+
+<body class="page">
+  <header class="navbar navbar-expand-md navbar-dark d-print-none" style="background-color: #4b2e83;">
+    <div class="container-xl">
+      <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-btn">
+        Husky Card Reader
+      </h1>
+    </div>
+  </header>
+
+  <div class="page-wrapper">
+    <div class="page-body">
+      <div class="container-xl">
+
+        <!-- Filters -->
+        <div class="row mb-3 mt-3">
+          <div class="col-sm-2">
+            <label class="form-label">Year</label>
+            <select id="filter-year" class="form-select">
+              <option value="all">All Years</option>
+            </select>
+          </div>
+          <div class="col-sm-2">
+            <label class="form-label">Month</label>
+            <select id="filter-month" class="form-select">
+              <option value="all">All Months</option>
+            </select>
+          </div>
+          <div class="col-sm-2">
+            <label class="form-label">Day</label>
+            <select id="filter-day" class="form-select">
+              <option value="all">All Days</option>
+            </select>
+          </div>
+          <div class="col-sm-2">
+            <label class="form-label">Start Date</label>
+            <input type="date" id="filter-start-date" class="form-control" />
+          </div>
+          <div class="col-sm-2">
+            <label class="form-label">End Date</label>
+            <input type="date" id="filter-end-date" class="form-control" />
+          </div>
+          <div class="col-sm-2 d-flex align-items-end">
+            <button id="clear-date-range" class="btn btn-outline-secondary w-100">Clear Range</button>
+          </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="row row-deck row-cards mb-4 mt-3">
+          <div class="col-sm-3">
+            <div class="card">
+              <div class="card-body">
+                <div class="subheader" id="sum-year-label">Year Total</div>
+                <div class="h1 mb-0" id="sum-year">—</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-3">
+            <div class="card">
+              <div class="card-body">
+                <div class="subheader" id="sum-month-label">Month Total</div>
+                <div class="h1 mb-0" id="sum-month">—</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-3">
+            <div class="card">
+              <div class="card-body">
+                <div class="subheader">Earliest Swipe</div>
+                <div class="h1 mb-0" id="earliest-time">—</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-3">
+            <div class="card">
+              <div class="card-body">
+                <div class="subheader">Latest Swipe</div>
+                <div class="h1 mb-0" id="latest-time">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="row row-deck row-cards mb-4">
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Swipes by Hour</h3>
+              </div>
+              <div class="card-body">
+                <div id="chart-by-hour" style="height: 300px;"></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Swipes by Day of Month</h3>
+              </div>
+              <div class="card-body">
+                <div id="chart-by-date" style="height: 300px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Traffic Trend by Day of Week -->
+        <div class="row row-deck row-cards mb-4">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Traffic Trend by Day of Week</h3>
+              </div>
+              <div class="card-body">
+                <div id="chart-by-weekday" style="height: 300px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Swipe Log</h3>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-vcenter card-table table-striped">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Time</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody id="table-body">
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+  <script src="app.js"></script>
+</body>
+
+</html>
