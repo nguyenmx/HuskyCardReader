@@ -16,6 +16,8 @@ var dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"
 
 var allData = [];
 var hourChart, dateChart, weekdayChart;
+var sortCol = null;  // 'time', 'date', 'name', or null (newest-first default)
+var sortDir = "asc";
 
 function populateFilters(data) {
   var years = {}, months = {}, days = {};
@@ -74,10 +76,6 @@ function renderDashboard() {
 
   // Summary cards
   if (data.length > 0) {
-    var times = data.map(function (row) { return row.time; }).sort();
-    document.getElementById("earliest-time").textContent = formatTime(times[0]);
-    document.getElementById("latest-time").textContent = formatTime(times[times.length - 1]);
-
     // Sum by selected year (always count from allData, not filtered data)
     var yearFilter = document.getElementById("filter-year").value;
     if (yearFilter !== "all") {
@@ -100,13 +98,29 @@ function renderDashboard() {
       document.getElementById("sum-month").textContent = data.length;
     }
 
+    // Date range total — only show card when both dates are set
+    var startDate = document.getElementById("filter-start-date").value;
+    var endDate = document.getElementById("filter-end-date").value;
+    if (startDate && endDate) {
+      var rangeSum = allData.filter(function (row) { return row.date >= startDate && row.date <= endDate; }).length;
+      document.getElementById("sum-range-label").textContent = startDate + " → " + endDate;
+      document.getElementById("sum-range").textContent = rangeSum;
+    } else if (startDate) {
+      var daySum = allData.filter(function (row) { return row.date === startDate; }).length;
+      document.getElementById("sum-range-label").textContent = startDate;
+      document.getElementById("sum-range").textContent = daySum;
+    } else {
+      document.getElementById("sum-range-label").textContent = "Total Swipes by Date";
+      document.getElementById("sum-range").textContent = "—";
+    }
+
   } else {
-    document.getElementById("earliest-time").textContent = "—";
-    document.getElementById("latest-time").textContent = "—";
     document.getElementById("sum-year").textContent = "—";
     document.getElementById("sum-year-label").textContent = "Year Total";
     document.getElementById("sum-month").textContent = "—";
     document.getElementById("sum-month-label").textContent = "Month Total";
+    document.getElementById("sum-range-label").textContent = "Total Swipes by Date";
+    document.getElementById("sum-range").textContent = "—";
   }
 
   // Swipes by Hour chart
@@ -166,10 +180,33 @@ function renderDashboard() {
     }]
   }, true);
 
-  // Table rows — newest first
+  // Table rows — sort by active column, or newest first by default
   var tbody = document.getElementById("table-body");
   tbody.innerHTML = "";
-  data.slice().reverse().forEach(function (row) {
+  var tableRows = data.slice();
+  if (sortCol) {
+    tableRows.sort(function (a, b) {
+      var valA = (a[sortCol] || "").toLowerCase();
+      var valB = (b[sortCol] || "").toLowerCase();
+      return sortDir === "asc" ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    });
+  } else {
+    tableRows.reverse();
+  }
+
+
+  ["time", "date", "name"].forEach(function (col) {
+    var arrowEl = document.getElementById("sort-arrow-" + col);
+    if (sortCol === col) {
+      arrowEl.textContent = sortDir === "asc" ? "↑" : "↓";
+      arrowEl.style.color = "#4b2e83";
+    } else {
+      arrowEl.textContent = "⇅";
+      arrowEl.style.color = "#6c757d";
+    }
+  });
+
+  tableRows.forEach(function (row) {
     var tr = document.createElement("tr");
     tr.innerHTML =
       "<td>" + row.id + "</td>" +
@@ -180,7 +217,7 @@ function renderDashboard() {
   });
 }
 
-Papa.parse("output.csv", {
+Papa.parse("data/output.csv", {
   download: true,
   header: true,
   skipEmptyLines: true,
@@ -206,6 +243,24 @@ Papa.parse("output.csv", {
     }
 
     renderDashboard();
+
+    document.getElementById("reset-sort").addEventListener("click", function () {
+      sortCol = null;
+      sortDir = "asc";
+      renderDashboard();
+    });
+
+    ["time", "date", "name"].forEach(function (col) {
+      document.getElementById("sort-" + col).addEventListener("click", function () {
+        if (sortCol === col) {
+          sortDir = sortDir === "asc" ? "desc" : "asc";
+        } else {
+          sortCol = col;
+          sortDir = "asc";
+        }
+        renderDashboard();
+      });
+    });
 
     document.getElementById("filter-year").addEventListener("change", renderDashboard);
     document.getElementById("filter-month").addEventListener("change", renderDashboard);

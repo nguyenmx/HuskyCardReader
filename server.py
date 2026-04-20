@@ -26,7 +26,7 @@ from flask import Flask, Response, send_from_directory
 app = Flask(__name__)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CSV_FILE = os.path.join(BASE_DIR, "output.csv")
+CSV_FILE = os.path.join(BASE_DIR, "data", "output.csv")
 CSV_FIELDS = ["id", "name", "time", "date"]
 
 # Per-client SSE queues
@@ -43,6 +43,16 @@ def parse_swipe(raw_input):
     raw = raw_input.strip()
     if "E?" in raw:
         return None, "error"
+    # Husky card format: ;XXXXXXXXXXXXXX? (14-digit track)
+    # Staff:   remove first 2 chars (;+1 prefix digit) and last 5 (4 suffix digits+?) → 9-digit ID
+    # Student: remove first 4 chars (;+3 prefix digits) and last 5 (4 suffix digits+?) → 7-digit ID
+    match = re.search(r";(\d{14})\?", raw)
+    if match:
+        digits = match.group(1)
+        if digits[0] == "2":
+            return digits[1:-4], "staff"
+        else:
+            return digits[3:-4], "student"
     # Staff: exactly 9 digits
     match = re.search(r"(?<!\d)(\d{9})(?!\d)", raw)
     if match:

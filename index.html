@@ -7,6 +7,10 @@
   <title>Husky Card Reader</title>
   <link rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
+  <style>
+    #sort-time:hover, #sort-date:hover, #sort-name:hover { background-color: #f0ebfa; }
+    #sort-time:hover span, #sort-date:hover span, #sort-name:hover span { color: #4b2e83; }
+  </style>
 </head>
 
 <body class="page">
@@ -57,7 +61,7 @@
 
         <!-- Summary Cards -->
         <div class="row row-deck row-cards mb-4 mt-3">
-          <div class="col-sm-3">
+          <div class="col-sm-4">
             <div class="card">
               <div class="card-body">
                 <div class="subheader" id="sum-year-label">Year Total</div>
@@ -65,7 +69,7 @@
               </div>
             </div>
           </div>
-          <div class="col-sm-3">
+          <div class="col-sm-4">
             <div class="card">
               <div class="card-body">
                 <div class="subheader" id="sum-month-label">Month Total</div>
@@ -73,19 +77,11 @@
               </div>
             </div>
           </div>
-          <div class="col-sm-3">
-            <div class="card">
+          <div class="col-sm-4" id="sum-range-card">
+            <div class="card border-primary">
               <div class="card-body">
-                <div class="subheader">Earliest Swipe</div>
-                <div class="h1 mb-0" id="earliest-time">—</div>
-              </div>
-            </div>
-          </div>
-          <div class="col-sm-3">
-            <div class="card">
-              <div class="card-body">
-                <div class="subheader">Latest Swipe</div>
-                <div class="h1 mb-0" id="latest-time">—</div>
+                <div class="subheader" id="sum-range-label">Total Swipes by Date</div>
+                <div class="h1 mb-0" id="sum-range">—</div>
               </div>
             </div>
           </div>
@@ -133,15 +129,24 @@
         <div class="card">
           <div class="card-header">
             <h3 class="card-title">Swipe Log</h3>
+            <div class="card-options">
+              <button id="reset-sort" class="btn btn-sm btn-outline-secondary">Reset Sort</button>
+            </div>
           </div>
           <div class="table-responsive">
             <table class="table table-vcenter card-table table-striped">
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Name</th>
-                  <th>Time</th>
-                  <th>Date</th>
+                  <th id="sort-name" style="cursor:pointer; user-select:none; white-space:nowrap;">
+                    Name <span id="sort-arrow-name" style="font-size:0.75rem; color:#6c757d;">⇅</span>
+                  </th>
+                  <th id="sort-time" style="cursor:pointer; user-select:none; white-space:nowrap;">
+                    Time <span id="sort-arrow-time" style="font-size:0.75rem; color:#6c757d;">⇅</span>
+                  </th>
+                  <th id="sort-date" style="cursor:pointer; user-select:none; white-space:nowrap;">
+                    Date <span id="sort-arrow-date" style="font-size:0.75rem; color:#6c757d;">⇅</span>
+                  </th>
                 </tr>
               </thead>
               <tbody id="table-body">

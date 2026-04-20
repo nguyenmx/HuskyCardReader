@@ -26,6 +26,17 @@ def parse_swipe(raw_input):
     if "E?" in raw:
         return None, "error"
 
+    # Husky card format: ;XXXXXXXXXXXXXX? (14-digit track)
+    # Staff:   remove first 2 chars (;+1 prefix digit) and last 5 (4 suffix digits+?) → 9-digit ID
+    # Student: remove first 4 chars (;+3 prefix digits) and last 5 (4 suffix digits+?) → 7-digit ID
+    match = re.search(r";(\d{14})\?", raw)
+    if match:
+        digits = match.group(1)
+        if digits[0] == "2":
+            return digits[1:-4], "staff"
+        else:
+            return digits[3:-4], "student"
+
     # Search for exactly 9 consecutive digits (staff) — check this first so a
     # 9-digit number isn't accidentally matched as a 7-digit substring.
     match = re.search(r"(?<!\d)(\d{9})(?!\d)", raw)
