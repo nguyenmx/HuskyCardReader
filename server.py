@@ -26,7 +26,7 @@ from flask import Flask, Response, send_from_directory
 app = Flask(__name__)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CSV_FILE = os.path.join(BASE_DIR, "data", "output.csv")
+CSV_FILE = os.path.join(BASE_DIR, "student-card-data", "output.csv")
 CSV_FIELDS = ["id", "name", "time", "date"]
 
 # Per-client SSE queues

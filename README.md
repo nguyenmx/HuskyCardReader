@@ -21,9 +21,9 @@ husky-card-reader/
   index.html                     # Dashboard page (Tabler layout)
   app.js                         # JavaScript: loads CSV, renders charts/table, listens for live updates
   search_resources.html          # Resource search page
-  output/
+  student-card-data/
     output.csv                   # Swipe log — created automatically on first swipe
-  data/
+  excel-test-data/
     student-test-data.xlsx       # Test Excel data
     output.csv                   # CSV generated from Excel data
   workspace/
@@ -49,7 +49,7 @@ The MagTek reader emits raw magnetic stripe data. The server (`server.py`) parse
 
 | Format | Raw example | Extracted ID | Type |
 |--------|-------------|--------------|------|
-| Husky Card student (14-digit track) | `;10012345672510?` | `xxxxxxxx` | student |
+| Husky Card student (14-digit track) | `;100xxxxxxx10?` | `xxxxxxxx` | student |
 | Husky Card staff (14-digit track) | `;2xxxxxxxxx3610?` | `xxxxxxxxxx` | staff |
 | Legacy student | `;1234567?` | `1234567` | student |
 | Legacy staff | `;123456789?` | `123456789` | staff |
