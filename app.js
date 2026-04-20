@@ -166,14 +166,14 @@ function renderDashboard() {
     }]
   }, true);
 
-  // Table rows
+  // Table rows — newest first
   var tbody = document.getElementById("table-body");
   tbody.innerHTML = "";
-  data.forEach(function (row) {
+  data.slice().reverse().forEach(function (row) {
     var tr = document.createElement("tr");
     tr.innerHTML =
       "<td>" + row.id + "</td>" +
-      "<td>" + row.name + "</td>" +
+      "<td>" + (row.name || "NULL") + "</td>" +
       "<td>" + formatTime(row.time) + "</td>" +
       "<td>" + row.date + "</td>";
     tbody.appendChild(tr);
@@ -219,5 +219,40 @@ Papa.parse("output.csv", {
       document.getElementById("filter-day").value = "all";
       renderDashboard();
     });
+
+    // Live swipe updates via Server-Sent Events
+    if (typeof EventSource !== "undefined") {
+      var evtSource = new EventSource("/stream");
+
+      evtSource.onmessage = function (event) {
+        var swipe = JSON.parse(event.data);
+        allData.push(swipe);
+
+        // Add new year to filter dropdown if not already present
+        var yearSelect = document.getElementById("filter-year");
+        var swipeYear = swipe.date.split("-")[0];
+        var yearExists = Array.from(yearSelect.options).some(function (o) { return o.value === swipeYear; });
+        if (!yearExists) {
+          var opt = document.createElement("option");
+          opt.value = swipeYear;
+          opt.textContent = swipeYear;
+          yearSelect.insertBefore(opt, yearSelect.options[1]);
+        }
+
+        // Re-render charts, summary cards, and table with updated data
+        renderDashboard();
+
+        // Highlight the first row (the newest swipe) after renderDashboard rebuilds the table
+        var firstRow = document.querySelector("#table-body tr");
+        if (firstRow) {
+          firstRow.style.backgroundColor = "#e8e0f5";
+          setTimeout(function () { firstRow.style.backgroundColor = ""; }, 2000);
+        }
+      };
+
+      evtSource.onerror = function () {
+        console.warn("SSE connection lost — live updates paused.");
+      };
+    }
   }
 });
