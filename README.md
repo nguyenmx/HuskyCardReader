@@ -51,8 +51,6 @@ The MagTek reader emits raw magnetic stripe data. The server (`server.py`) parse
 |--------|-------------|--------------|------|
 | Husky Card student (14-digit track) | `;100xxxxxxx10?` | `xxxxxxxx` | student |
 | Husky Card staff (14-digit track) | `;2xxxxxxxxx3610?` | `xxxxxxxxxx` | staff |
-| Legacy student | `;1234567?` | `1234567` | student |
-| Legacy staff | `;123456789?` | `123456789` | staff |
 | Too-fast swipe | `...E?...` | — | error (retry prompt) |
 
 For the 14-digit Husky Card format, the server distinguishes staff from student by the first digit of the track data (after `;`):
@@ -85,3 +83,16 @@ python convert-xlsx-csv.py
 ```
 
 This converts `student-test-data.xlsx` into `output.csv`. Any subsequent live swipes will be appended to the same file.
+
+## Using an Existing CSV File
+
+To render data from your own CSV file:
+
+1. Drop the CSV into the `student-card-data/` folder.
+2. In `app.js`, update the path passed to `Papa.parse` to point to your file:
+
+```js
+Papa.parse("student-card-data/your-file.csv", {
+```
+
+The CSV must have the same columns as the standard format (`id`, `name`, `time`, `date`). Reload the dashboard in your browser to see the data.

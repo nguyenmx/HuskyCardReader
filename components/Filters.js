@@ -1,3 +1,14 @@
+// Filters Component
+// Manages the filter dropdowns (Year, Month, Day, Start/End Date) and data filtering.
+//
+// Public API:
+//   Filters.populate(data)        - Build year/month/day dropdown options from loaded data.
+//   Filters.getFiltered(allData)  - Return rows matching the current filter selections.
+//   Filters.getValues()           - Return current filter values { year, month, startDate, endDate }.
+//   Filters.addNewYear(year)      - Add a new year option to the dropdown (used on live swipe).
+//   Filters.init(onChange)        - Attach change/clear event listeners to all filter controls.
+//   Filters.monthNames            - Array of month name strings (index 1–12).
+
 var Filters = (function () {
   var monthNames = [
     "", "January", "February", "March", "April", "May", "June",

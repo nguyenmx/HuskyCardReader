@@ -1,3 +1,10 @@
+// SwipeLog Component
+// Manages the Swipe Log table: rendering rows, column sorting, and new-swipe highlight.
+//
+// Public API:
+//   SwipeLog.init(onSortChange)          - Attach click listeners to sortable column headers and reset button.
+//   SwipeLog.render(data, formatTimeFn)  - Render table rows with current sort applied.
+//   SwipeLog.highlightLatest()           - Briefly highlight the top row (used after a live swipe).
 var SwipeLog = (function () {
   var sortCol = null;
   var sortDir = "asc";

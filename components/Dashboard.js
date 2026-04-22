@@ -1,3 +1,11 @@
+// Dashboard Component
+// Handles all visual rendering: summary cards, charts, and the swipe log table.
+// Reads filter state from Filters and delegates table rendering to SwipeLog.
+//
+// Public API:
+//   Dashboard.initCharts()         - Initialize ECharts instances. Call once after CSV loads.
+//   Dashboard.render(allData, formatTimeFn) - Re-render cards, charts, and table using current filters.
+
 var Dashboard = (function () {
   var dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   var hourChart, dateChart, weekdayChart;

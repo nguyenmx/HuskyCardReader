@@ -13,6 +13,7 @@ function renderDashboard() {
   Dashboard.render(allData, formatTime);
 }
 
+// Renders initial test data onto the dashboard for testing.
 Papa.parse("excel-test-data/output.csv", {
   download: true,
   header: true,
