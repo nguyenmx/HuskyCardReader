@@ -21,6 +21,10 @@ husky-card-reader/
   index.html                     # Dashboard page (Tabler layout)
   app.js                         # JavaScript: loads CSV, renders charts/table, listens for live updates
   search_resources.html          # Resource search page
+  components/
+    Dashboard.js                 # Renders summary cards, charts, and the swipe table
+    Filters.js                   # Populates and handles year/type filter controls
+    SwipeLog.js                  # Manages the live swipe log and highlights new entries
   student-card-data/
     output.csv                   # Swipe log — created automatically on first swipe
   excel-test-data/
