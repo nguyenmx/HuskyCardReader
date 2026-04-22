@@ -17,22 +17,27 @@ pip install flask pandas openpyxl
 
 ```
 husky-card-reader/
-  server.py                      # Flask server: reads card swipes, writes CSV, streams updates
-  index.html                     # Dashboard page (Tabler layout)
-  app.js                         # JavaScript: loads CSV, renders charts/table, listens for live updates
-  search_resources.html          # Resource search page
-  components/
-    Dashboard.js                 # Renders summary cards, charts, and the swipe table
-    Filters.js                   # Populates and handles year/type filter controls
-    SwipeLog.js                  # Manages the live swipe log and highlights new entries
-  student-card-data/
-    output.csv                   # Swipe log — created automatically on first swipe
-  excel-test-data/
-    student-test-data.xlsx       # Test Excel data
-    output.csv                   # CSV generated from Excel data
-  workspace/
-    convert-xlsx-csv.py          # One-time utility to convert Excel data to CSV
-    magtek-reader-test.py        # Standalone card reader test script (no server)
+│
+├── server.py                    # Flask server: reads card swipes, writes CSV, streams SSE updates
+├── index.html                   # Main dashboard page (Tabler UI layout)
+├── search_resources.html        # Resource search page
+├── app.js                       # Entry point: loads CSV data, wires up components, listens for live updates
+│
+├── components/                  # UI component modules (loaded by index.html)
+│   ├── Dashboard.js             # Renders summary cards, charts, and the swipe table
+│   ├── Filters.js               # Populates and handles year/type filter controls
+│   └── SwipeLog.js              # Manages the live swipe log and highlights new entries
+│
+├── student-card-data/           # Live swipe data
+│   └── output.csv               # Swipe log — created automatically on first swipe
+│
+├── excel-test-data/             # Test data for development
+│   ├── student-test-data.xlsx   # Source Excel file
+│   └── output.csv               # CSV converted from the Excel file
+│
+└── workspace/                   # Utility scripts (not served)
+    ├── convert-xlsx-csv.py      # One-time script to convert Excel data to CSV
+    └── magtek-reader-test.py    # Standalone card reader test (no server needed)
 ```
 
 ## Running the Server
