@@ -14,8 +14,8 @@ function renderDashboard() {
 }
 
 // Renders initial test data onto the dashboard for testing.
-// This can load existing data from a csv.
-Papa.parse("live-card-data/output.csv", {
+// This can can also load live card data from a csv.
+Papa.parse("test-data/output.csv", {
   download: true,
   header: true,
   skipEmptyLines: true,

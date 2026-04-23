@@ -8,21 +8,82 @@
 
 var Dashboard = (function () {
   var dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  var hourChart, dateChart, weekdayChart;
+  var hourChart, dateChart, weekdayChart, heatmapChart, compareChart;
 
   function initCharts() {
     hourChart = echarts.init(document.getElementById("chart-by-hour"));
     dateChart = echarts.init(document.getElementById("chart-by-date"));
     weekdayChart = echarts.init(document.getElementById("chart-by-weekday"));
+    heatmapChart = echarts.init(document.getElementById("chart-heatmap"));
+    compareChart = echarts.init(document.getElementById("chart-compare"));
 
     window.addEventListener("resize", function () {
       hourChart.resize();
       dateChart.resize();
       weekdayChart.resize();
+      heatmapChart.resize();
+      compareChart.resize();
+    });
+
+    ["compare-date-1", "compare-date-2"].forEach(function (id) {
+      document.getElementById(id).addEventListener("change", function () {
+        renderCompare(window._allData, window._formatTimeFn);
+      });
+    });
+
+    document.getElementById("clear-compare").addEventListener("click", function () {
+      document.getElementById("compare-date-1").value = "";
+      document.getElementById("compare-date-2").value = "";
+      document.getElementById("compare-chart-row").style.display = "none";
     });
   }
 
+  function hourCountsForDate(allData, date) {
+    var counts = {};
+    allData.forEach(function (row) {
+      if (row.date === date) {
+        var h = parseInt(row.time.split(":")[0], 10);
+        counts[h] = (counts[h] || 0) + 1;
+      }
+    });
+    return counts;
+  }
+
+  function renderCompare(allData, formatTimeFn) {
+    var d1 = document.getElementById("compare-date-1").value;
+    var d2 = document.getElementById("compare-date-2").value;
+    var row = document.getElementById("compare-chart-row");
+
+    if (!d1 || !d2) { row.style.display = "none"; return; }
+
+    row.style.display = "";
+    compareChart.resize();
+    document.getElementById("compare-chart-title").textContent = "Hourly Comparison — " + d1 + " vs " + d2;
+
+    var counts1 = hourCountsForDate(allData, d1);
+    var counts2 = hourCountsForDate(allData, d2);
+    var labels = [], vals1 = [], vals2 = [];
+    for (var h = 0; h < 24; h++) {
+      labels.push(formatTimeFn(h + ":00:00"));
+      vals1.push(counts1[h] || 0);
+      vals2.push(counts2[h] || 0);
+    }
+
+    compareChart.setOption({
+      tooltip: { trigger: "axis" },
+      legend: { data: [d1, d2] },
+      xAxis: { type: "category", data: labels, axisLabel: { rotate: 45 } },
+      yAxis: { type: "value", minInterval: 1, name: "Number of Swipes", nameLocation: "middle", nameGap: 35 },
+      series: [
+        { name: d1, type: "bar", data: vals1, color: "#4b2e83" },
+        { name: d2, type: "bar", data: vals2, color: "#b7a57a" }
+      ]
+    }, true);
+  }
+
   function render(allData, formatTimeFn) {
+    window._allData = allData;
+    window._formatTimeFn = formatTimeFn;
     var data = Filters.getFiltered(allData);
 
     // Summary cards
@@ -130,6 +191,52 @@ var Dashboard = (function () {
       }]
     }, true);
 
+    // Heatmap: day-of-week (y) vs hour (x)
+    var heatCounts = {};
+    data.forEach(function (row) {
+      var hour = parseInt(row.time.split(":")[0], 10);
+      var day = new Date(row.date + "T00:00:00").getDay();
+      var key = hour + "," + day;
+      heatCounts[key] = (heatCounts[key] || 0) + 1;
+    });
+
+    var heatData = [];
+    var heatMax = 0;
+    for (var hd = 0; hd < 7; hd++) {
+      for (var hh = 0; hh < 24; hh++) {
+        var val = heatCounts[hh + "," + hd] || 0;
+        heatData.push([hh, hd, val]);
+        if (val > heatMax) heatMax = val;
+      }
+    }
+
+    var heatHourLabels = [];
+    for (var lh = 0; lh < 24; lh++) {
+      heatHourLabels.push(formatTimeFn(lh + ":00:00"));
+    }
+
+    heatmapChart.setOption({
+      tooltip: {
+        formatter: function (p) {
+          return dayNames[p.data[1]] + " " + heatHourLabels[p.data[0]] + ": " + p.data[2] + " swipe(s)";
+        }
+      },
+      grid: { top: 10, bottom: 60, left: 70, right: 60 },
+      xAxis: { type: "category", data: heatHourLabels, axisLabel: { rotate: 45, fontSize: 10 } },
+      yAxis: { type: "category", data: dayNames },
+      visualMap: {
+        min: 0, max: heatMax || 1,
+        calculable: false,
+        orient: "horizontal",
+        left: "center",
+        bottom: 0,
+        itemHeight: 100,
+        inRange: { color: ["#f0ebfa", "#4b2e83"] }
+      },
+      series: [{ type: "heatmap", data: heatData, emphasis: { itemStyle: { shadowBlur: 6, shadowColor: "rgba(0,0,0,0.3)" } } }]
+    }, true);
+
+    renderCompare(allData, formatTimeFn);
     SwipeLog.render(data, formatTimeFn);
   }
 
