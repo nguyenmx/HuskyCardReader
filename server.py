@@ -26,7 +26,7 @@ from flask import Flask, Response, send_from_directory
 app = Flask(__name__)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CSV_FILE = os.path.join(BASE_DIR, "student-card-data", "output.csv")
+CSV_FILE = os.path.join(BASE_DIR, "live-card-data", "output.csv")
 CSV_FIELDS = ["id", "name", "time", "date"]
 
 # Per-client SSE queues
@@ -76,6 +76,7 @@ def load_csv():
 
 
 def append_csv(swipe):
+    os.makedirs(os.path.dirname(CSV_FILE), exist_ok=True)
     file_exists = os.path.exists(CSV_FILE)
     with open(CSV_FILE, "a", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=CSV_FIELDS)

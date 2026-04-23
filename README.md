@@ -28,10 +28,10 @@ husky-card-reader/
 │   ├── Filters.js               # Populates and handles year/type filter controls
 │   └── SwipeLog.js              # Manages the live swipe log and highlights new entries
 │
-├── student-card-data/           # Live swipe data
+├── live-card-data/           # Live swipe data
 │   └── output.csv               # Swipe log — created automatically on first swipe
 │
-├── excel-test-data/             # Test data for development
+├── test-data/                   # Test data for development
 │   ├── student-test-data.xlsx   # Source Excel file
 │   └── output.csv               # CSV converted from the Excel file
 │
@@ -97,11 +97,11 @@ This converts `student-test-data.xlsx` into `output.csv`. Any subsequent live sw
 
 To render data from your own CSV file:
 
-1. Drop the CSV into the `student-card-data/` folder.
+1. Drop the CSV into the `test-data/` folder.
 2. In `app.js`, update the path passed to `Papa.parse` to point to your file:
 
 ```js
-Papa.parse("student-card-data/your-file.csv", {
+Papa.parse("test-data/your-file.csv", {
 ```
 
 The CSV must have the same columns as the standard format (`id`, `name`, `time`, `date`). Reload the dashboard in your browser to see the data.

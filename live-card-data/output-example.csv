@@ -1,0 +1,8 @@
+# This is an example of live csv data.
+# Swiping the card will create an output.csv file inside this direction and append to it.
+
+id,name,time,date
+1234567,NULL,09:58:03,2026-04-20
+1234567,NULL,10:17:48,2026-04-20
+1234567,NULL,10:17:48,2026-04-20
+
