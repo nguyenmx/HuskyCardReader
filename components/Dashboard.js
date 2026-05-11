@@ -7,22 +7,70 @@
 //   Dashboard.render(allData, formatTimeFn) - Re-render cards, charts, and table using current filters.
 
 var Dashboard = (function () {
-  var dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  var hourChart, dateChart, weekdayChart, heatmapChart, compareChart;
+  var dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  var dayAbbrevs = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  var hourChart, dateChart, weekdayChart, weekdayPieChart, heatmapChart, compareChart, monthCompareChart, dayCompareChart, hourCompareChart;
+  var compareYearsPopulated = false;
 
   function initCharts() {
     hourChart = echarts.init(document.getElementById("chart-by-hour"));
     dateChart = echarts.init(document.getElementById("chart-by-date"));
     weekdayChart = echarts.init(document.getElementById("chart-by-weekday"));
+    weekdayPieChart = echarts.init(document.getElementById("chart-weekday-pie"));
     heatmapChart = echarts.init(document.getElementById("chart-heatmap"));
     compareChart = echarts.init(document.getElementById("chart-compare"));
+    monthCompareChart = echarts.init(document.getElementById("chart-month-compare"));
+    dayCompareChart = echarts.init(document.getElementById("chart-day-compare"));
+    hourCompareChart = echarts.init(document.getElementById("chart-hour-compare"));
 
     window.addEventListener("resize", function () {
       hourChart.resize();
       dateChart.resize();
       weekdayChart.resize();
+      weekdayPieChart.resize();
       heatmapChart.resize();
       compareChart.resize();
+      monthCompareChart.resize();
+      dayCompareChart.resize();
+      hourCompareChart.resize();
+    });
+
+    document.getElementById("tab-compare-link").addEventListener("shown.bs.tab", function () {
+      var type = document.getElementById("compare-type").value;
+      if (type === "month") monthCompareChart.resize();
+      else if (type === "day") dayCompareChart.resize();
+      else hourCompareChart.resize();
+    });
+
+    document.getElementById("compare-type").addEventListener("change", function () {
+      var type = this.value;
+      ["month", "day", "hour"].forEach(function (t) {
+        var show = t === type;
+        var ctrl = document.getElementById("compare-controls-" + t);
+        var sect = document.getElementById("compare-section-" + t);
+        ctrl.className = show ? "d-contents" : "d-contents-hidden";
+        ctrl.style.display = show ? "" : "none";
+        sect.style.display = show ? "" : "none";
+      });
+      if (type === "month") monthCompareChart.resize();
+      else if (type === "day") dayCompareChart.resize();
+      else hourCompareChart.resize();
+    });
+
+    ["mc1-month", "mc1-year", "mc2-month", "mc2-year"].forEach(function (id) {
+      document.getElementById(id).addEventListener("change", function () {
+        renderMonthCompare(window._allData);
+      });
+    });
+    ["day-compare-date-1", "day-compare-date-2"].forEach(function (id) {
+      document.getElementById(id).addEventListener("change", function () {
+        renderDayCompare(window._allData);
+      });
+    });
+    ["hour-compare-year-1", "hour-compare-year-2"].forEach(function (id) {
+      document.getElementById(id).addEventListener("change", function () {
+        renderHourCompare(window._allData);
+      });
     });
 
     ["compare-date-1", "compare-date-2"].forEach(function (id) {
@@ -72,8 +120,9 @@ var Dashboard = (function () {
     compareChart.setOption({
       tooltip: { trigger: "axis" },
       legend: { data: [d1, d2] },
+      grid: { left: 75, right: 15, top: 40, bottom: 80 },
       xAxis: { type: "category", data: labels, axisLabel: { rotate: 45 } },
-      yAxis: { type: "value", minInterval: 1, name: "Number of Swipes", nameLocation: "middle", nameGap: 35 },
+      yAxis: { type: "value", minInterval: 1, name: "Number of Swipes", nameLocation: "middle", nameGap: 45 },
       series: [
         { name: d1, type: "bar", data: vals1, color: "#4b2e83" },
         { name: d2, type: "bar", data: vals2, color: "#b7a57a" }
@@ -100,16 +149,6 @@ var Dashboard = (function () {
         document.getElementById("sum-year").textContent = allData.length;
       }
 
-      var monthFilter = filterVals.month;
-      if (monthFilter !== "all") {
-        var monthSum = data.filter(function (row) { return parseInt(row.date.split("-")[1], 10) === parseInt(monthFilter, 10); }).length;
-        document.getElementById("sum-month-label").textContent = Filters.monthNames[parseInt(monthFilter, 10)] + " Total";
-        document.getElementById("sum-month").textContent = monthSum;
-      } else {
-        document.getElementById("sum-month-label").textContent = "Month Total";
-        document.getElementById("sum-month").textContent = data.length;
-      }
-
       var startDate = filterVals.startDate;
       var endDate = filterVals.endDate;
       if (startDate && endDate) {
@@ -128,8 +167,6 @@ var Dashboard = (function () {
     } else {
       document.getElementById("sum-year").textContent = "—";
       document.getElementById("sum-year-label").textContent = "Year Total";
-      document.getElementById("sum-month").textContent = "—";
-      document.getElementById("sum-month-label").textContent = "Month Total";
       document.getElementById("sum-range-label").textContent = "Total Swipes by Date";
       document.getElementById("sum-range").textContent = "—";
     }
@@ -140,35 +177,67 @@ var Dashboard = (function () {
       var hour = parseInt(row.time.split(":")[0], 10);
       hourCounts[hour] = (hourCounts[hour] || 0) + 1;
     });
-    var hourLabels = Object.keys(hourCounts).sort(function (a, b) { return a - b; });
-    var hourValues = hourLabels.map(function (h) { return hourCounts[h]; });
-    var hourDisplayLabels = hourLabels.map(function (h) { return formatTimeFn(h + ":00:00"); });
+    var hourDisplayLabels = [];
+    var hourValues = [];
+    for (var h = 0; h < 24; h++) {
+      var ampm = h >= 12 ? "PM" : "AM";
+      hourDisplayLabels.push((h % 12 || 12) + " " + ampm);
+      hourValues.push(hourCounts[h] || 0);
+    }
 
     hourChart.setOption({
-      tooltip: {},
-      xAxis: { type: "category", data: hourDisplayLabels, axisLabel: { rotate: 45 } },
-      yAxis: { type: "value", minInterval: 1, name: "Number of Swipes", nameLocation: "middle", nameGap: 35 },
-      series: [{ type: "bar", data: hourValues, color: "#4b2e83" }]
+      tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+      grid: { left: 75, right: 15, top: 15, bottom: 40 },
+      dataZoom: [
+        {
+          type: "slider",
+          xAxisIndex: 0,
+          bottom: 0,
+          height: 7,
+          start: 35,
+          end: 65,
+          zoomLock: true,
+          showDetail: false,
+          showDataShadow: false,
+          borderColor: "transparent",
+          backgroundColor: "#ebebeb",
+          fillerColor: "#c8c8c8",
+          handleSize: 0,
+          moveHandleSize: 0,
+          brushSelect: false
+        },
+        { type: "inside", xAxisIndex: 0, start: 35, end: 65, zoomLock: true }
+      ],
+      xAxis: {
+        type: "category",
+        data: hourDisplayLabels,
+        axisLabel: { rotate: 45, interval: 0, fontSize: 10 },
+        axisTick: { alignWithLabel: true }
+      },
+      yAxis: { type: "value", minInterval: 1, name: "Number of Swipes", nameLocation: "middle", nameGap: 45 },
+      series: [{
+        type: "bar",
+        data: hourValues,
+        color: "#4b2e83",
+        barMaxWidth: 30,
+        itemStyle: { borderRadius: [3, 3, 0, 0] }
+      }]
     }, true);
 
-    // Swipes by Day of Month chart
-    var dayOfMonthCounts = {};
+    // Swipes by Month chart
+    var monthAbbrevs = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    var monthCounts = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     data.forEach(function (row) {
-      var day = parseInt(row.date.split("-")[2], 10);
-      dayOfMonthCounts[day] = (dayOfMonthCounts[day] || 0) + 1;
+      var m = parseInt(row.date.split("-")[1], 10) - 1;
+      monthCounts[m] += 1;
     });
-    var dayLabels = [];
-    var dayValues = [];
-    for (var i = 1; i <= 31; i++) {
-      dayLabels.push(i);
-      dayValues.push(dayOfMonthCounts[i] || 0);
-    }
 
     dateChart.setOption({
       tooltip: {},
-      xAxis: { type: "category", data: dayLabels, name: "Day of the Month", nameLocation: "middle", nameGap: 25 },
-      yAxis: { type: "value", minInterval: 1, name: "Number of Swipes", nameLocation: "middle", nameGap: 35 },
-      series: [{ type: "bar", data: dayValues, color: "#b7a57a" }]
+      grid: { left: 75, right: 15, top: 15, bottom: 35 },
+      xAxis: { type: "category", data: monthAbbrevs, axisLabel: { interval: 0 } },
+      yAxis: { type: "value", minInterval: 1, name: "Number of Swipes", nameLocation: "middle", nameGap: 45 },
+      series: [{ type: "bar", data: monthCounts, color: "#b7a57a" }]
     }, true);
 
     // Traffic Trend by Day of Week chart
@@ -180,14 +249,36 @@ var Dashboard = (function () {
 
     weekdayChart.setOption({
       tooltip: {},
-      xAxis: { type: "category", data: dayNames },
-      yAxis: { type: "value", minInterval: 1, name: "Number of Swipes", nameLocation: "middle", nameGap: 35 },
+      grid: { left: 75, right: 15, top: 15, bottom: 35 },
+      xAxis: { type: "category", data: dayAbbrevs, boundaryGap: false, axisLabel: { interval: 0 }, axisTick: { alignWithLabel: true } },
+      yAxis: { type: "value", minInterval: 1, name: "Number of Swipes", nameLocation: "middle", nameGap: 45 },
       series: [{
         type: "line",
         smooth: true,
         data: weekdayCounts,
         color: "#4b2e83",
         areaStyle: { color: "rgba(75, 46, 131, 0.15)" }
+      }]
+    }, true);
+
+    var pieColors = ["#2d1a5e", "#4b2e83", "#7b5ea7", "#a98fd1", "#d4c5ed", "#b7a57a", "#e0cc8f"];
+    weekdayPieChart.setOption({
+      tooltip: { trigger: "item", formatter: "{b}: {c} ({d}%)" },
+      legend: {
+        orient: "vertical",
+        left: 0,
+        top: "middle",
+        data: dayNames
+      },
+      series: [{
+        type: "pie",
+        radius: ["28%", "85%"],
+        center: ["60%", "50%"],
+        data: dayNames.map(function (name, i) {
+          return { name: name, value: weekdayCounts[i], itemStyle: { color: pieColors[i] } };
+        }),
+        label: { show: true, position: "inside", formatter: "{d}%", color: "#ffffff", fontSize: 12 },
+        labelLine: { length: 10, length2: 10 }
       }]
     }, true);
 
@@ -237,7 +328,132 @@ var Dashboard = (function () {
     }, true);
 
     renderCompare(allData, formatTimeFn);
+
+    // Populate comparison selectors once
+    if (!compareYearsPopulated) {
+      var years = [];
+      allData.forEach(function (row) {
+        var y = row.date.split("-")[0];
+        if (years.indexOf(y) === -1) years.push(y);
+      });
+      years.sort();
+
+      // Month compare: populate year selects and set defaults
+      ["mc1-year", "mc2-year"].forEach(function (id, i) {
+        var sel = document.getElementById(id);
+        years.forEach(function (y) {
+          var o = document.createElement("option"); o.value = y; o.textContent = y; sel.appendChild(o);
+        });
+        sel.value = years[Math.min(i, years.length - 1)];
+      });
+
+      // Hour compare: populate year selects
+      var hs1 = document.getElementById("hour-compare-year-1");
+      var hs2 = document.getElementById("hour-compare-year-2");
+      years.forEach(function (y) {
+        var o1 = document.createElement("option"); o1.value = y; o1.textContent = y; hs1.appendChild(o1);
+        var o2 = document.createElement("option"); o2.value = y; o2.textContent = y; hs2.appendChild(o2);
+      });
+      if (years.length >= 1) hs1.value = years[0];
+      if (years.length >= 2) hs2.value = years[1];
+
+      compareYearsPopulated = true;
+    }
+    renderMonthCompare(allData);
+    renderDayCompare(allData);
+    renderHourCompare(allData);
+
     SwipeLog.render(data, formatTimeFn);
+  }
+
+  function renderMonthCompare(allData) {
+    var year1 = document.getElementById("mc1-year").value;
+    var year2 = document.getElementById("mc2-year").value;
+    if (!year1 || !year2) return;
+
+    var monthAbbrevs = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    var counts1 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    var counts2 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    allData.forEach(function (row) {
+      var parts = row.date.split("-");
+      var m = parseInt(parts[1], 10) - 1;
+      if (parts[0] === year1) counts1[m]++;
+      if (parts[0] === year2) counts2[m]++;
+    });
+
+    document.getElementById("month-compare-title").textContent = "Monthly Comparison — " + year1 + " vs " + year2;
+    monthCompareChart.setOption({
+      tooltip: { trigger: "axis" },
+      legend: { data: [year1, year2], top: 5 },
+      grid: { left: 75, right: 15, top: 40, bottom: 35 },
+      xAxis: { type: "category", data: monthAbbrevs, axisLabel: { interval: 0 } },
+      yAxis: { type: "value", minInterval: 1, name: "Number of Swipes", nameLocation: "middle", nameGap: 45 },
+      series: [
+        { name: year1, type: "bar", data: counts1, color: "#4b2e83" },
+        { name: year2, type: "bar", data: counts2, color: "#b7a57a" }
+      ]
+    }, true);
+  }
+
+  function renderDayCompare(allData) {
+    var d1 = document.getElementById("day-compare-date-1").value;
+    var d2 = document.getElementById("day-compare-date-2").value;
+    if (!d1 || !d2) return;
+
+    var hourLabels = [];
+    for (var h = 0; h < 24; h++) {
+      hourLabels.push((h % 12 || 12) + " " + (h >= 12 ? "PM" : "AM"));
+    }
+    var c1 = hourCountsForDate(allData, d1);
+    var c2 = hourCountsForDate(allData, d2);
+    var vals1 = [], vals2 = [];
+    for (var i = 0; i < 24; i++) { vals1.push(c1[i] || 0); vals2.push(c2[i] || 0); }
+
+    document.getElementById("day-compare-title").textContent = "Day Comparison — " + d1 + " vs " + d2;
+    dayCompareChart.setOption({
+      tooltip: { trigger: "axis" },
+      legend: { data: [d1, d2], top: 5 },
+      grid: { left: 75, right: 15, top: 40, bottom: 50 },
+      xAxis: { type: "category", data: hourLabels, axisLabel: { interval: 0, fontSize: 10, rotate: 45 } },
+      yAxis: { type: "value", minInterval: 1, name: "Number of Swipes", nameLocation: "middle", nameGap: 45 },
+      series: [
+        { name: d1, type: "bar", data: vals1, color: "#4b2e83" },
+        { name: d2, type: "bar", data: vals2, color: "#b7a57a" }
+      ]
+    }, true);
+  }
+
+  function renderHourCompare(allData) {
+    var year1 = document.getElementById("hour-compare-year-1").value;
+    var year2 = document.getElementById("hour-compare-year-2").value;
+    if (!year1 || !year2) return;
+
+    var counts1 = new Array(24).fill(0);
+    var counts2 = new Array(24).fill(0);
+    var hourLabels = [];
+    for (var h = 0; h < 24; h++) {
+      hourLabels.push((h % 12 || 12) + " " + (h >= 12 ? "PM" : "AM"));
+    }
+    allData.forEach(function (row) {
+      var y = row.date.split("-")[0];
+      if (y !== year1 && y !== year2) return;
+      var hr = parseInt(row.time.split(":")[0], 10);
+      if (y === year1) counts1[hr]++;
+      if (y === year2) counts2[hr]++;
+    });
+
+    document.getElementById("hour-compare-title").textContent = "Hour Comparison — " + year1 + " vs " + year2;
+    hourCompareChart.setOption({
+      tooltip: { trigger: "axis" },
+      legend: { data: [year1, year2], top: 5 },
+      grid: { left: 75, right: 15, top: 40, bottom: 35 },
+      xAxis: { type: "category", data: hourLabels, axisLabel: { interval: 0, fontSize: 10, rotate: 45 } },
+      yAxis: { type: "value", minInterval: 1, name: "Number of Swipes", nameLocation: "middle", nameGap: 45 },
+      series: [
+        { name: year1, type: "bar", data: counts1, color: "#4b2e83" },
+        { name: year2, type: "bar", data: counts2, color: "#b7a57a" }
+      ]
+    }, true);
   }
 
   return { initCharts: initCharts, render: render };
